@@ -14,48 +14,40 @@ def cleanText(datalist):
     sent = ""
     for each in datalist:
         x = re.split(f, each)
-        for e in x: sent += e.lstrip().rstrip() + " "
-    
+        for e in x:
+            sent += f"{e.lstrip().rstrip()} "
+
     sent = sent.lstrip().rstrip()
     return sent 
 
 with open("dataset/dataset.csv") as f:
     dataFile = csv.reader(f, delimiter=",")
 
-    countVal =0
     data = [] # this is contain the sentences 
     tLabels = []
 
-    for row in dataFile:
+    for countVal, row in enumerate(dataFile):
         if countVal != 0:
             tLabels.append(row[0].lower())
-            d = []
-            
-            for each in row[1:]:
-                if each != "": d.append(each.lower().lstrip().rstrip())
-            data.append(cleanText(d))
-             
-        countVal += 1
+            d = [each.lower().lstrip().rstrip() for each in row[1:] if each != ""]
 
-iterationVal = 7 
+            data.append(cleanText(d))
+
+iterationVal = 7
 embeddingDim = 100# for memory compromisation  
 
-maxSequenceLength =50 
-maxNbWords = 20000 
+maxSequenceLength =50
+maxNbWords = 20000
 validationSplit = 0.05
 
 setLabels = sorted(set(tLabels))
-diseaseToId = dict((dis, num) for num, dis in enumerate(setLabels))
+diseaseToId = {dis: num for num, dis in enumerate(setLabels)}
 
-labels = []
-
-print(setLabels) 
+print(setLabels)
 with open("label.pickle", "wb") as f:
     pickle.dump(setLabels, f) 
 
-for each in tLabels:
-    labels.append(diseaseToId[each])
-
+labels = [diseaseToId[each] for each in tLabels]
 X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.15, random_state=8)
 
 ngramRange = (1,2)

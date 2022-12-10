@@ -1,5 +1,5 @@
 # here is the command line version of the chatbot for protyping
-import os 
+import os
 import pickle
 
 with open("label.pickle", "rb") as f:
@@ -13,14 +13,13 @@ with open("tdf.pickle", "rb") as f:
 
 print(setLabels)
 
-print(sorted(setLabels)) 
-convert = dict((num, dis) for num, dis in enumerate(setLabels))
+print(sorted(setLabels))
+convert = dict(enumerate(setLabels))
 
 
 data = ""
 
 data = [data]
 testData = tf.transform(data).toarray()
-s = best_svc.predict(testData)
-return (convert[s[0]]) 
+s = best_svc.predict(testData) 
 

@@ -1,7 +1,7 @@
-import os 
-import pickle 
+import os
+import pickle
 import csv
-import re 
+import re
 from numpy.random import randint 
 
 starter = [
@@ -19,7 +19,7 @@ with open("dataset/tdf.pickle", "rb") as f:
     tf = pickle.load(f) 
 
 
-convert = dict((num, dis) for num, dis in enumerate(setLabels))
+convert = dict(enumerate(setLabels))
 
 
 def tryPredict(data):
@@ -36,56 +36,37 @@ def cleanText(datalist):
     sent = []
     for each in datalist:
         x = re.split(f, each)
-        for e in x: sent.append(e) 
+        sent.extend(iter(x)) 
 
     return sent 
 
 with open("dataset/dataset.csv") as f:
     dataFile = csv.reader(f, delimiter=",")
 
-    countVal =0
-    
-    for row in dataFile:
+    for countVal, row in enumerate(dataFile):
         if countVal != 0:
             disease_list.append(row[0].lower().lstrip().rstrip())
-            d = []
-            
-            for each in row[1:]:
-                if each != "": d.append(each.lower().lstrip().rstrip())
-            
+            d = [each.lower().lstrip().rstrip() for each in row[1:] if each != ""]
+
             l = cleanText(d)
             for each in l: symptoms_list.append(each)
-
-        countVal += 1
-
-
 
 precaution_list = {}
 
 with open("dataset/symptom_precaution.csv") as f:
     dataFile = csv.reader(f, delimiter=",")
 
-    countVal =0
-
-    for row in dataFile:
+    for countVal, row in enumerate(dataFile):
         if countVal != 0:
             diseaseName = row[0].lower().lstrip().rstrip()
-            d = []
-            
-            for each in row[1:]:
-                if each != "": d.append(each.lower().lstrip().rstrip())
+            d = [each.lower().lstrip().rstrip() for each in row[1:] if each != ""]
 
             precaution_list[diseaseName] = d
 
-        countVal += 1
-
 def cleanWord(word):
     f = "[_]"
-    sent = []
     x = re.split(f, word)
-    for e in x: sent.append(e) 
-
-    return sent 
+    return list(x) 
 
 
 severityIndex = {} # 4.2222 being the mean value, 1 -> lowest, 7 -> highest  
@@ -93,33 +74,25 @@ severityIndex = {} # 4.2222 being the mean value, 1 -> lowest, 7 -> highest
 
 with open("dataset/Symptom-severity.csv") as f:
     dataFile = csv.reader(f, delimiter=",")
-    countVal =0 
-
-    for row in dataFile:
+    for countVal, row in enumerate(dataFile):
         if countVal != 0:
             diseaseName = row[0].lower()
             sevVal = row[1]
             diseaseName = cleanWord(diseaseName)
             for each in diseaseName:
                 severityIndex[each] = int(sevVal)
-        
-        countVal += 1
 
 diseaseDesc = {}
 
 with open("dataset/symptom_Description.csv") as f:
     dataFile = csv.reader(f, delimiter=",")
-    countVal =0 
-
-    for row in dataFile:
+    for countVal, row in enumerate(dataFile):
         if countVal != 0:
             diseaseName = row[0].lower()
             desc = row[1]
             diseaseName = diseaseName.split()
             for each in diseaseName:
                 diseaseDesc[each] = desc 
-        
-        countVal += 1
 
 #text = "I have got fever since a few days. Headache as well. an a stomach pain"
 
@@ -133,25 +106,17 @@ while True:
 
     text = text.lower().split()
 
-    identified_symptoms = []
-    for each in text:
-        if each in symptoms_list:
-            identified_symptoms.append(each)
-
+    identified_symptoms = [each for each in text if each in symptoms_list]
     s = " ".join(identified_symptoms)
     pred_disease = tryPredict(s)
 
-    appointment_necessity = False 
-    for each in identified_symptoms:
-        if severityIndex[each] > 5:
-            appointment_necessity = True 
-            break
-
-
+    appointment_necessity = any(
+        severityIndex[each] > 5 for each in identified_symptoms
+    )
     #appointment_necessity = False # TODO: remove this
-    if appointment_necessity == True:
+    if appointment_necessity:
         print("we think it's is a serious case given your symptoms so, please pick and appointment")
-        print("possible disease is: ", pred_disease) 
+        print("possible disease is: ", pred_disease)
     else:
         print("disease is:", pred_disease) 
         # precaution to be taken 
